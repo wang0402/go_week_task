@@ -2,8 +2,9 @@ package dao
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
-	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -22,21 +23,26 @@ func init() {
 	dbConn = db
 }
 
-func QueryProductList() ([]Product, error) {
-	product := make([]Product, 0)
-	tx := dbConn.Find(&product)
+//opaque写法
+var notFoundCode = 40001
+var systemErr = 50001
+
+func QueryProductList(query string) error {
+
+	tx := dbConn.Find(query)
 	if tx.Error == sql.ErrNoRows {
-		//由于sql.ErrNoRows相当于没有查询到符合条件的数据 并不算错误
-		return product, nil
+		//在这一步封装好查询参数，这样DEBUG就能知道请求什么数据，没找到
+		//同时带上了堆栈信息方便定位
+		//我们没有仔细区别err是什么 就是告诉上游 出错了
+		return fmt.Errorf("%d, not found", notFoundCode)
 	}
 	if tx.Error != nil {
-		return product, errors.Wrap(tx.Error, "获取产品数据集合调用数据库异常")
+		return fmt.Errorf("%d, not found", systemErr)
 	}
-	return product, nil
+	// go something
+	return nil
 }
 
-type Product struct {
-	gorm.Model
-	Code  string
-	Price uint
+func IsNoRow(err error) bool {
+	return strings.HasPrefix(err.Error(), fmt.Sprintf("%d", notFoundCode))
 }
