@@ -39,7 +39,7 @@ func main() {
 		return srv.ListenAndServe()
 	})
 
-	//监听到error return
+	//监听到ctx结束
 	g.Go(func() error {
 		select {
 		case <-ctx.Done():
