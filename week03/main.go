@@ -23,7 +23,7 @@ func main() {
 
 	//定义单缓冲信号量chan
 	signalCh := make(chan os.Signal, 1)
-	signal.Notify(signalCh, syscall.SIGQUIT)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGQUIT)
 
 	var myServer myServer
 
